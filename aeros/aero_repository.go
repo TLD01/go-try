@@ -10,24 +10,26 @@ import (
 const collectionName = "aeros"
 
 type AerosRepository struct {
-	repository.MongoRepository
+	*repository.MongoRepository[*AeroEntity]
 }
 
 func NewAerosRepository(db *mongo.Database) (*AerosRepository, error) {
 	if db == nil {
 		return nil, repository.ErrDbRequired
 	}
-	mongoRepo, err := repository.NewMongoRepository(db, collectionName)
+	mongoRepo, err := repository.NewMongoRepository[*AeroEntity](db, collectionName)
 	if err != nil {
 		return nil, err
 	}
 	return &AerosRepository{
-		MongoRepository: *mongoRepo,
+		MongoRepository: mongoRepo,
 	}, nil
 }
 
-
-func (r *AerosRepository) Patch2(ctx context.Context, aero *Aero) (*Aero, error) {
-	return r.Save(ctx, aero)
+func (r *AerosRepository) Patch2(ctx context.Context, aero *AeroEntity) (*AeroEntity, error) {
+	result, err := r.Save(ctx, &aero)
+	if err != nil {
+		return nil, err
+	}
+	return *result, nil
 }
-
