@@ -1,16 +1,16 @@
 package aeros
 
 import (
-	"time"
-	"aerowatch.com/api/repository"
 	"aerowatch.com/api/geolocation"
+	"aerowatch.com/api/repository"
+	"time"
 )
 
 type AeroEntity struct {
 	repository.DBEntity
-	Callsign     string            `json:"callsign"`
-	IcaoAddress  string            `json:"icao_address"`
-	Model        string            `json:"model"`
-	LastSeen     time.Time         `json:"last_seen"`
-	LastPosition geolocation.Point `json:"last_position"`
+	Callsign     string            `bson:"callsign"`
+	IcaoAddress  string            `bson:"icaoAddress"`
+	Model        string            `bson:"model"`
+	LastSeen     time.Time         `bson:"lastSeen"`
+	LastPosition geolocation.Point `bson:"lastPosition"`
 }

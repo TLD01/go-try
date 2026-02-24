@@ -15,6 +15,7 @@ type Aero struct {
 	Model        string            `json:"model"`
 	LastSeen     time.Time         `json:"last_seen"`
 	LastPosition geolocation.Point `json:"last_position"`
+	Countries   []string          `json:"countries,omitempty"`
 }
 
 func (a *Aero) Serialize() string {

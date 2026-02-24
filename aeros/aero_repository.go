@@ -1,8 +1,6 @@
 package aeros
 
 import (
-	"context"
-
 	"aerowatch.com/api/repository"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -24,12 +22,4 @@ func NewAerosRepository(db *mongo.Database) (*AerosRepository, error) {
 	return &AerosRepository{
 		MongoRepository: mongoRepo,
 	}, nil
-}
-
-func (r *AerosRepository) Patch2(ctx context.Context, aero *AeroEntity) (*AeroEntity, error) {
-	result, err := r.Save(ctx, &aero)
-	if err != nil {
-		return nil, err
-	}
-	return *result, nil
 }
