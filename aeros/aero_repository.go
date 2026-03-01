@@ -19,7 +19,10 @@ func NewAerosRepository(db *mongo.Database) (*AerosRepository, error) {
 	if err != nil {
 		return nil, err
 	}
+	
 	return &AerosRepository{
 		MongoRepository: mongoRepo,
 	}, nil
 }
+
+
