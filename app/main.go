@@ -9,7 +9,8 @@ import (
 	"aerowatch.com/api/geofence"
 	"aerowatch.com/api/geolocation"
 	"aerowatch.com/api/jsonutil"
-	"aerowatch.com/api/lfv"
+	"aerowatch.com/api/lfv/altitude_unit"
+	"aerowatch.com/api/lfv/reference_system"
 )
 
 func main() {
@@ -57,10 +58,33 @@ func main() {
 		return
 	}
 
-	for _, layer := range lfv.All() {
-		fmt.Printf("Map Layer: %s, Description: %s\n", layer.Name(), layer.Description)
+	var altitudeUnit1 altitude_unit.AltitudeUnit
+	altitudeUnit1 = altitude_unit.GND_SFC
+	var altitudeUnit2 altitude_unit.AltitudeUnit = altitude_unit.GND_SFC
+	var altitudeUnit3 *altitude_unit.AltitudeUnit = &altitude_unit.GND_SFC
+
+	fmt.Println(altitudeUnit1.String())
+	fmt.Println(altitudeUnit2.String())
+
+	fmt.Printf("%p\n", &altitudeUnit1)
+	fmt.Printf("%p\n", &altitudeUnit2)
+	fmt.Printf("%p\n", altitudeUnit3)
+
+	jsonBytes, err := altitudeUnit1.MarshalJSON()
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return
 	}
+	fmt.Printf("%s\n", string(jsonBytes))
+
+	fmt.Println(&altitudeUnit1 == &altitudeUnit2)
+	fmt.Println(altitudeUnit1.Equal(altitudeUnit2))
 
 	fmt.Printf("Deserialized Aero: %+v\n", aero2)
 	fmt.Println(aero.Serialize())
+
+	 allReferencePoints := reference_system.All()
+	 for _, rp := range allReferencePoints {
+		 fmt.Printf("Reference Point: %s - %s\n", rp.Name(), rp.Description)
+	 }
 }
