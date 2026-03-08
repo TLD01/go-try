@@ -6,14 +6,20 @@ import (
 
 	"aerowatch.com/api/aeros"
 	"aerowatch.com/api/common"
+	"aerowatch.com/api/config/logging"
+	_ "aerowatch.com/api/config/logging"
 	"aerowatch.com/api/geofence"
 	"aerowatch.com/api/geolocation"
-	"aerowatch.com/api/jsonutil"
 	"aerowatch.com/api/lfv/altitude_unit"
 	"aerowatch.com/api/lfv/reference_system"
+	"aerowatch.com/api/repository"
+	"github.com/TLD01/tld_constants/jsonutil"
 )
 
 func main() {
+	var logger = logging.GetLogger("main")
+	logger.Debug("Starting application")
+
 	fmt.Println("app is ready")
 	aero := &aeros.Aero{
 		Callsign:    "TEST123",
@@ -25,7 +31,7 @@ func main() {
 			Longitude: -74.0060,
 		},
 		Persisted: common.Persisted{
-			Id:        "1",
+			ID:        "1",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
@@ -83,8 +89,12 @@ func main() {
 	fmt.Printf("Deserialized Aero: %+v\n", aero2)
 	fmt.Println(aero.Serialize())
 
-	 allReferencePoints := reference_system.All()
-	 for _, rp := range allReferencePoints {
-		 fmt.Printf("Reference Point: %s - %s\n", rp.Name(), rp.Description)
-	 }
+	allReferencePoints := reference_system.All()
+	for _, rp := range allReferencePoints {
+		fmt.Printf("Reference Point: %s - %s\n", rp.Name(), rp.Description)
+	}
+
+	p := common.Persisted{}
+	d := repository.Create(p)
+	fmt.Printf("DBEntity: %+v\n", d)
 }

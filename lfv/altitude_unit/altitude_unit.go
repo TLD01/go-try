@@ -1,7 +1,7 @@
 package altitude_unit
 
 import (
-	"aerowatch.com/api/constants"
+	constants "github.com/TLD01/tld_constants"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
@@ -10,7 +10,6 @@ type AltitudeUnit struct {
 	Unit        string
 	Description string
 }
-
 
 func (a AltitudeUnit) Equal(other AltitudeUnit) bool {
 	return a.Name() == other.Name()
@@ -31,7 +30,6 @@ var (
 	FT_AMSL = AltitudeUnit{constants.NewStringConstant("FT_AMSL"), "-", "Feet above mean sea level (när ingen enhet anges)"}
 )
 
-
 func All() []AltitudeUnit {
 	return []AltitudeUnit{GND_SFC, FL, UNL, FT_AMSL}
 }
@@ -44,7 +42,6 @@ func (a *AltitudeUnit) UnmarshalJSON(data []byte) error {
 	*a = *unit
 	return nil
 }
-
 
 func (a *AltitudeUnit) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 	unit, err := constants.UnmarshalBSONValue(All(), t, data)

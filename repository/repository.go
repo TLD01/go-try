@@ -12,19 +12,27 @@ import (
 
 var ErrNotFound = errors.New("entity not found")
 var ErrDbRequired = errors.New("mongo database is required")
+var ErrRepoRequired = errors.New("repository is required")
 
-type Repository[T Entity] interface {
+type Repository[T any] interface {
 	Save(ctx context.Context, entity *T) (*T, error)
 	Find(ctx context.Context, id bson.ObjectID) (*T, error)
+	FindOne(ctx context.Context, filter bson.M, opts ...options.Lister[options.FindOneOptions]) (*T, error)
 	Patch(ctx context.Context, id bson.ObjectID, vals map[string]any) (*T, error)
 	Delete(ctx context.Context, id bson.ObjectID) error
 }
 
-type MongoRepository[T Entity] struct {
+type MongoRepository[T any, PT interface {
+	Entity
+	*T
+}] struct {
 	collection *mongo.Collection
 }
 
-func NewMongoRepository[T Entity](db *mongo.Database, collectionName string) (*MongoRepository[T], error) {
+func NewMongoRepository[T any, PT interface {
+	Entity
+	*T
+}](db *mongo.Database, collectionName string) (*MongoRepository[T, PT], error) {
 
 	if collectionName == "" {
 		return nil, ErrMongoCollectionName
@@ -34,10 +42,18 @@ func NewMongoRepository[T Entity](db *mongo.Database, collectionName string) (*M
 		return nil, ErrDbRequired
 	}
 	collection := db.Collection(collectionName)
-	return &MongoRepository[T]{collection: collection}, nil
+	return &MongoRepository[T, PT]{collection: collection}, nil
 }
 
-func (r *MongoRepository[T]) Find(ctx context.Context, id bson.ObjectID) (*T, error) {
+func (r *MongoRepository[T, PT]) ToID(id string) (bson.ObjectID) {
+	objectID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return bson.ObjectID{}
+	}
+	return objectID	
+}
+
+func (r *MongoRepository[T, PT]) Find(ctx context.Context, id bson.ObjectID) (*T, error) {
 	var entity T
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&entity)
 	if err != nil {
@@ -49,7 +65,40 @@ func (r *MongoRepository[T]) Find(ctx context.Context, id bson.ObjectID) (*T, er
 	return &entity, nil
 }
 
-func (r *MongoRepository[T]) Delete(ctx context.Context, id bson.ObjectID) error {
+func (r *MongoRepository[T, PT]) FindOne(ctx context.Context, filter bson.M, opts ...options.Lister[options.FindOneOptions]) (*T, error) {
+	var entity T
+	err := r.collection.FindOne(ctx, filter, opts...).Decode(&entity)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &entity, nil
+}
+
+func (r *MongoRepository[T, PT]) FindMany(ctx context.Context, filter bson.M, opts ...options.Lister[options.FindOptions]) (*[]T, error) {
+	cursor, err := r.collection.Find(ctx, filter, opts...)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	entities := []T{}
+	for cursor.Next(ctx) {
+		var entity T
+		if err := cursor.Decode(&entity); err != nil {
+			return nil, err
+		}
+		entities = append(entities, entity)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	return &entities, nil
+}
+
+func (r *MongoRepository[T, PT]) Delete(ctx context.Context, id bson.ObjectID) error {
 	deleteResult, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return err
@@ -60,7 +109,7 @@ func (r *MongoRepository[T]) Delete(ctx context.Context, id bson.ObjectID) error
 	return nil
 }
 
-func (r *MongoRepository[T]) Patch(ctx context.Context, id bson.ObjectID, vals map[string]any) (*T, error) {
+func (r *MongoRepository[T, PT]) Patch(ctx context.Context, id bson.ObjectID, vals map[string]any) (*T, error) {
 	if _, ok := vals["_id"]; ok {
 		return nil, errors.New("_id field cannot be modified")
 	}
@@ -81,8 +130,8 @@ func (r *MongoRepository[T]) Patch(ctx context.Context, id bson.ObjectID, vals m
 	return &entity, nil
 }
 
-func (r *MongoRepository[T]) Save(ctx context.Context, entity *T) (*T, error) {
-	if (*entity).ID().IsZero() {
+func (r *MongoRepository[T, PT]) Save(ctx context.Context, entity *T) (*T, error) {
+	if PT(entity).ID().IsZero() {
 		// inserted, err := r.insert(ctx, entity)
 		_, err := r.insert(ctx, entity)
 		if err != nil {
@@ -94,10 +143,10 @@ func (r *MongoRepository[T]) Save(ctx context.Context, entity *T) (*T, error) {
 	return r.replace(ctx, entity)
 }
 
-func (r *MongoRepository[T]) replace(ctx context.Context, entity *T) (*T, error) {
-	(*entity).SetUpdatedAt(time.Now())
+func (r *MongoRepository[T, PT]) replace(ctx context.Context, entity *T) (*T, error) {
+	PT(entity).SetUpdatedAt(time.Now())
 
-	updateResult, err := r.collection.ReplaceOne(ctx, bson.M{"_id": (*entity).ID()}, entity, options.Replace().SetUpsert(false))
+	updateResult, err := r.collection.ReplaceOne(ctx, bson.M{"_id": PT(entity).ID()}, entity, options.Replace().SetUpsert(false))
 	if err != nil {
 		return nil, err
 	}
@@ -107,10 +156,10 @@ func (r *MongoRepository[T]) replace(ctx context.Context, entity *T) (*T, error)
 	return entity, nil
 }
 
-func (r *MongoRepository[T]) insert(ctx context.Context, entity *T) (*mongo.InsertOneResult, error) {
-	(*entity).SetCreatedAt(time.Now())
-	(*entity).SetUpdatedAt(time.Now())
-	(*entity).SetID(bson.NewObjectID())
+func (r *MongoRepository[T, PT]) insert(ctx context.Context, entity *T) (*mongo.InsertOneResult, error) {
+	PT(entity).SetCreatedAt(time.Now())
+	PT(entity).SetUpdatedAt(time.Now())
+	PT(entity).SetID(bson.NewObjectID())
 
 	insertOneResult, err := r.collection.InsertOne(ctx, entity)
 	if err != nil {

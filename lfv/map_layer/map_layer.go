@@ -1,7 +1,7 @@
 package map_layer
 
 import (
-	"aerowatch.com/api/constants"
+	constants "github.com/TLD01/tld_constants"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 

@@ -1,6 +1,7 @@
 package jsonutil
 
 import (
+	"bytes"
 	"encoding/json"
 )
 
@@ -10,12 +11,23 @@ import (
 //
 //	str, err := JsonSerialize(map[string]int{"count": 42})
 //	// str = `{"count":42}`
-func JsonSerialize[T any](v T) (string, error) {
-	bytes, err := json.MarshalIndent(v, "", "  ")
+func JsonSerialize[T any](v T) (string, error) {	
+	return Marshal(v)
+}
+
+
+func Marshal(v any) (string, error) {
+	var buffer bytes.Buffer
+	enc := json.NewEncoder(&buffer)
+
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	
+	err := enc.Encode(v)
 	if err != nil {
 		return "", err
 	}
-	return string(bytes), nil
+	return buffer.String(), nil
 }
 
 // JsonDeserialize parses a JSON string into a value.

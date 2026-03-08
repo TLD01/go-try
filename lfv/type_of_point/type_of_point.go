@@ -1,10 +1,9 @@
 package type_of_point
 
 import (
-	"aerowatch.com/api/constants"
+	constants "github.com/TLD01/tld_constants"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
-
 
 type TypeOfPoint struct {
 	constants.StringConstant
@@ -20,7 +19,6 @@ var (
 func All() []TypeOfPoint {
 	return []TypeOfPoint{ARP, HKP}
 }
-
 
 func (t *TypeOfPoint) UnmarshalJSON(data []byte) error {
 	pointType, err := constants.UnmarshalJSON(All(), data)
@@ -39,5 +37,3 @@ func (t *TypeOfPoint) UnmarshalBSONValue(tpe bsontype.Type, data []byte) error {
 	*t = *pointType
 	return nil
 }
-
-

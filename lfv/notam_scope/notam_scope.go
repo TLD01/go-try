@@ -1,12 +1,12 @@
 package notam_scope
 
 import (
-	"aerowatch.com/api/constants"
+	constants "github.com/TLD01/tld_constants"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
 type NotamScope struct {
-	constants.StringConstant	
+	constants.StringConstant
 	Code        string `json:"code" bson:"code"`
 	Description string `json:"description" bson:"description"`
 }
@@ -26,9 +26,8 @@ func All() []NotamScope {
 	return []NotamScope{Aerodrome, NavWarning, Enroute, Checklist}
 }
 
-
 func (n *NotamScope) UnmarshalJSON(data []byte) error {
-	scope, err := constants.UnmarshalJSON(All(), data)	
+	scope, err := constants.UnmarshalJSON(All(), data)
 	if err != nil {
 		return err
 	}
@@ -36,8 +35,7 @@ func (n *NotamScope) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-
-func (n *NotamScope) UnmarshalBSONValue(t bsontype.Type, data []byte) error {	
+func (n *NotamScope) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 	scope, err := constants.UnmarshalBSONValue(All(), t, data)
 	if err != nil {
 		return err
@@ -45,6 +43,3 @@ func (n *NotamScope) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 	*n = *scope
 	return nil
 }
-
-
-

@@ -1,7 +1,7 @@
 package notam_type
 
 import (
-	"aerowatch.com/api/constants"
+	constants "github.com/TLD01/tld_constants"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
