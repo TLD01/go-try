@@ -44,6 +44,32 @@ func (e *EventsService) Search(ctx context.Context, icaoAddress string, timeWind
 }
 
 
+func (e *EventsService) Save(ctx context.Context, event *Event) (*Event, error) {
+	eventEntity, err := e.Repository.Save(ctx, create(event))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = e.AeroService.SaveLatestEvent(ctx, &event.VehicleMessage, event.Timestamp)
+	if err != nil {
+		return nil, err
+	}
+
+	return toEvent(eventEntity), nil
+}
+
+
+
+func create(event *Event) *events_repository.EventEntity {
+	return &events_repository.EventEntity{
+		DBEntity: repository.Create(event.Persisted),
+		Source: event.Source,
+		Timestamp: event.Timestamp,
+		VehicleMessage: event.VehicleMessage,
+	}
+}
+
+
 func toEvent(eventEntity *events_repository.EventEntity) *Event {
 	return &Event{
 		Persisted: eventEntity.DBEntity.ToPersisted(),

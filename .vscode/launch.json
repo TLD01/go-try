@@ -6,7 +6,11 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${file}"
+      "program": "${file}",
+      "env": {
+        "MONGO_URI": "mongodb://localhost:27017",
+        "MONGO_DATABASE": "dronehunters"
+      }
     }
   ]
 }

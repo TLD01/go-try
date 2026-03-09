@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	aero_repository "aerowatch.com/api/aeros/repository"	
+	aero_repository "aerowatch.com/api/aeros/repository"
+	"aerowatch.com/api/common"
+	"aerowatch.com/api/geolocation"
 	"aerowatch.com/api/receivers/messages"
 	repository "aerowatch.com/api/repository"
 )
@@ -43,6 +45,27 @@ func (as *AeroService) SaveLatestEvent(ctx context.Context, vehicleMessage *mess
 	}
 	return toAero(aeroEntity), nil
 	
+}
+
+func (as *AeroService) Get(ctx context.Context, icao string) (*Aero, error) {
+	aeroEntity, err := as.Repository.FindByIcao(ctx, icao)
+	if err != nil {
+		return nil, err
+	}	
+	return toAero(aeroEntity), nil
+}
+
+
+func (as *AeroService) Search(ctx context.Context, boundary geolocation.BoundingBox, timeWindow common.TimeWindow) (*[]Aero, error) {
+	aeroEntities, err := as.Repository.Search(ctx, boundary, timeWindow)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]Aero, len(*aeroEntities))
+	for i, entity := range *aeroEntities {
+		result[i] = *toAero(&entity)
+	}
+	return &result, nil
 }
 
 

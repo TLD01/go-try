@@ -9,6 +9,14 @@ require (
 )
 
 require (
+	go.uber.org/dig v1.19.0 // indirect
+	go.uber.org/fx v1.24.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/zap v1.26.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+)
+
+require (
 	github.com/TLD01/tld_constants v0.0.0-00010101000000-000000000000
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
