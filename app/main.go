@@ -10,6 +10,7 @@ import (
 	aero_repository "aerowatch.com/api/aeros/repository"
 	v1aeros "aerowatch.com/api/api/aeros/v1"
 	v1events "aerowatch.com/api/api/events/v1"
+	"aerowatch.com/api/api/filters"
 	"aerowatch.com/api/config/logging"
 	"aerowatch.com/api/events"
 	events_repository "aerowatch.com/api/events/repository"
@@ -65,7 +66,8 @@ func startHTTPServer(lc fx.Lifecycle, aeroCtrl *v1aeros.AeroController, eventCtr
 	mux := http.NewServeMux()
 	aeroCtrl.RegisterRoutes(mux)
 	eventCtrl.RegisterRoutes(mux)
-	server := &http.Server{Addr: ":8080", Handler: mux}
+	handler := filters.CorrelationIDMiddleware(filters.LoggingMiddleware(mux))
+	server := &http.Server{Addr: ":8080", Handler: handler}
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
